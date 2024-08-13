@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nana Nội thất</title>
+    <link rel="shortcut icon" href="https://ninhpoal.github.io/apptesst/logo.png" type="image/x-icon">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+        #appsheet-iframe {
+            width: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <iframe id="appsheet-iframe" src="https://www.appsheet.com/start/d3755e47-c036-4240-ae62-1f73f8f765e5?platform=desktop" frameborder="0"></iframe>
+
+    <script>
+        function resizeIframe() {
+            var iframe = document.getElementById('appsheet-iframe');
+            iframe.style.height = window.innerHeight + 'px';
+        }
+
+        window.onresize = resizeIframe;
+        resizeIframe(); // Gọi hàm lần đầu để thiết lập kích thước ban đầu
+    </script>
+</body>
+</html>
