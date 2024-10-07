@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="vi" class="h-full">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thống kê sản phẩm</title>
+    <link rel="shortcut icon" href="logo.png" type="image/x-icon">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.1/dist/flowbite.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/export-data.js"></script>
+    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#10B981',
+                        accent: '#F59E0B',
+                        warning: '#EF4444',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .bg-red-100 {
+            background-color: #FEE2E2;
+        }
+
+        .dark .bg-red-800 {
+            background-color: #991B1B;
+        }
+
+        .card {
+            @apply bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden;
+        }
+
+        .card-header {
+            @apply px-4 py-5 border-b border-gray-200 dark:border-gray-700;
+        }
+
+        .card-body {
+            @apply p-4;
+        }
+
+        @media (max-width: 640px) {
+            .card {
+                @apply rounded-none shadow-none;
+            }
+
+            .card-header {
+                @apply sticky top-0 bg-white dark:bg-gray-800 z-10;
+            }
+
+            .grid {
+                @apply gap-2;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 dark:bg-gray-900 h-full">
+    <div id="loadingOverlay"
+        class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white p-4 rounded-lg shadow-lg">
+            <svg class="animate-spin h-8 w-8 text-indigo-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none"
+                viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                </path>
+            </svg>
+            <p class="mt-2 text-center text-gray-700">Đang tải dữ liệu...</p>
+        </div>
+    </div>
+
+    <div class="min-h-full">
+        <nav class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+            <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <div class="flex">
+                        <div class="flex-shrink-0 flex items-center">
+                            <img class="h-8 w-auto" src="logo.png" alt="NZ LTĐ"> &emsp;
+                            <p class="text-4xl font-bold  text-[#c45911] bold dark:text-white">Nana Nội Thất</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center">
+                        <button id="darkModeToggle"
+                            class="ml-3 p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500">
+                            <span class="sr-only">Toggle dark mode</span>
+                            <svg id="darkModeIcon" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                            </svg>
+                            <svg id="lightModeIcon" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="py-6">
+            <div class="max-w-9xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="grid grid-cols-1 gap-6 lg:grid-cols-6">
+                    <!-- Filters Card -->
+                    <div
+                        class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300">
+                        <div class="p-6">
+                            <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Bộ lọc</h3>
+                            <div class="space-y-4">
+                                <div class="relative">
+                                    <label for="loaiFilter"
+                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Loại
+                                        phiếu</label>
+                                    <select id="loaiFilter"
+                                        class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                        <option value="">Tất cả</option>
+                                    </select>
+                                </div>
+                                <div class="relative">
+                                    <label for="dateRangeFilter"
+                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Khoảng
+                                        thời gian</label>
+                                    <select id="dateRangeFilter"
+                                        class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                        <option value="">Tất cả</option>
+                                        <option value="today">Hôm nay</option>
+                                        <option value="thisWeek">Tuần này</option>
+                                        <option value="lastWeek">Tuần trước</option>
+                                        <option value="thisMonth">Tháng này</option>
+                                        <option value="lastMonth">Tháng trước</option>
+                                        <option value="thisYear">Năm nay</option>
+                                    </select>
+                                </div>
+                                <div class="relative">
+                                    <label for="sohopdongFilter"
+                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Số hợp
+                                        đồng</label>
+                                    <select id="sohopdongFilter"
+                                        class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                        <option value="">Tất cả</option>
+                                    </select>
+                                </div>
+                                <div class="relative">
+                                    <label for="nhanvienFilter"
+                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Người
+                                        nộp/nhận tiền</label>
+                                    <select id="nhanvienFilter"
+                                        class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                        <option value="">Tất cả</option>
+                                    </select>
+                                </div>
+                                <div class="relative">
+                                    <label for="trangthaiFilter"
+                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Loại hợp
+                                        đồng</label>
+                                    <select id="trangthaiFilter"
+                                        class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                        <option value="">Tất cả</option>
+                                    </select>
+                                </div>
+                                <div class="relative">
+                                    <label for="nhomFilter"
+                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nhóm</label>
+                                    <select id="nhomFilter"
+                                        class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                        <option value="">Tất cả</option>
+                                    </select>
+                                </div>
+                                <div class="flex space-x-2 pt-4">
+                                    <button id="applyFilters"
+                                        class="flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200">
+                                        <i class="fas fa-filter mr-2"></i>Áp dụng
+                                    </button>
+                                    <button id="exportExcel"
+                                        class="flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200">
+                                        <i class="fas fa-file-excel mr-2"></i>Xuất Excel
+                                    </button>
+                                    <button id="resetFilters"
+                                        class="flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-700 dark:border-gray-500">
+                                        <i class="fas fa-undo mr-2"></i>Đặt lại
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Main Content Card -->
+                    <div class="lg:col-span-5">
+                        <!-- Stats Cards -->
+                        <div class="grid grid-cols-1 gap-6 sm:grid-cols-3 mb-6">
+                            <!-- Card 1: Tổng thu -->
+                            <div
+                                class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 ease-in-out transform hover:-translate-y-1">
+                                <div class="p-5">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 bg-green-600 rounded-lg p-3">
+                                            <svg class="w-[40px] h-[40px] fill-[#ffffff]" viewBox="0 0 512 512"
+                                                xmlns="http://www.w3.org/2000/svg">
+
+                                                <!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. -->
+                                                <path
+                                                    d="M470.7 9.4c3 3.1 5.3 6.6 6.9 10.3s2.4 7.8 2.4 12.2l0 .1v0 96c0 17.7-14.3 32-32 32s-32-14.3-32-32V109.3L310.6 214.6c-11.8 11.8-30.8 12.6-43.5 1.7L176 138.1 84.8 216.3c-13.4 11.5-33.6 9.9-45.1-3.5s-9.9-33.6 3.5-45.1l112-96c12-10.3 29.7-10.3 41.7 0l89.5 76.7L370.7 64H352c-17.7 0-32-14.3-32-32s14.3-32 32-32h96 0c8.8 0 16.8 3.6 22.6 9.3l.1 .1zM0 304c0-26.5 21.5-48 48-48H464c26.5 0 48 21.5 48 48V464c0 26.5-21.5 48-48 48H48c-26.5 0-48-21.5-48-48V304zM48 416v48H96c0-26.5-21.5-48-48-48zM96 304H48v48c26.5 0 48-21.5 48-48zM464 416c-26.5 0-48 21.5-48 48h48V416zM416 304c0 26.5 21.5 48 48 48V304H416zm-96 80a64 64 0 1 0 -128 0 64 64 0 1 0 128 0z">
+                                                </path>
+
+                                            </svg>
+                                        </div>
+                                        <div class="ml-5 w-0 flex-1">
+                                            <h3 class="text-lg font-semibold text-green-600 dark:text-white mb-1">Tổng
+                                                thu</h3>
+                                            <p id="totalInvoices"
+                                                class="text-2xl font-bold text-green-600 dark:text-green-400">0</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Card 2: Tổng chi -->
+                            <div
+                                class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 ease-in-out transform hover:-translate-y-1">
+                                <div class="p-5">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 bg-red-500 rounded-lg p-3">
+                                            <svg class="w-[40px] h-[40px] fill-[#ffffff]" viewBox="0 0 576 512"
+                                                xmlns="http://www.w3.org/2000/svg">
+
+                                                <!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. -->
+                                                <path
+                                                    d="M312 24V34.5c6.4 1.2 12.6 2.7 18.2 4.2c12.8 3.4 20.4 16.6 17 29.4s-16.6 20.4-29.4 17c-10.9-2.9-21.1-4.9-30.2-5c-7.3-.1-14.7 1.7-19.4 4.4c-2.1 1.3-3.1 2.4-3.5 3c-.3 .5-.7 1.2-.7 2.8c0 .3 0 .5 0 .6c.2 .2 .9 1.2 3.3 2.6c5.8 3.5 14.4 6.2 27.4 10.1l.9 .3c11.1 3.3 25.9 7.8 37.9 15.3c13.7 8.6 26.1 22.9 26.4 44.9c.3 22.5-11.4 38.9-26.7 48.5c-6.7 4.1-13.9 7-21.3 8.8V232c0 13.3-10.7 24-24 24s-24-10.7-24-24V220.6c-9.5-2.3-18.2-5.3-25.6-7.8c-2.1-.7-4.1-1.4-6-2c-12.6-4.2-19.4-17.8-15.2-30.4s17.8-19.4 30.4-15.2c2.6 .9 5 1.7 7.3 2.5c13.6 4.6 23.4 7.9 33.9 8.3c8 .3 15.1-1.6 19.2-4.1c1.9-1.2 2.8-2.2 3.2-2.9c.4-.6 .9-1.8 .8-4.1l0-.2c0-1 0-2.1-4-4.6c-5.7-3.6-14.3-6.4-27.1-10.3l-1.9-.6c-10.8-3.2-25-7.5-36.4-14.4c-13.5-8.1-26.5-22-26.6-44.1c-.1-22.9 12.9-38.6 27.7-47.4c6.4-3.8 13.3-6.4 20.2-8.2V24c0-13.3 10.7-24 24-24s24 10.7 24 24zM568.2 336.3c13.1 17.8 9.3 42.8-8.5 55.9L433.1 485.5c-23.4 17.2-51.6 26.5-80.7 26.5H192 32c-17.7 0-32-14.3-32-32V416c0-17.7 14.3-32 32-32H68.8l44.9-36c22.7-18.2 50.9-28 80-28H272h16 64c17.7 0 32 14.3 32 32s-14.3 32-32 32H288 272c-8.8 0-16 7.2-16 16s7.2 16 16 16H392.6l119.7-88.2c17.8-13.1 42.8-9.3 55.9 8.5zM193.6 384l0 0-.9 0c.3 0 .6 0 .9 0z">
+                                                </path>
+
+                                            </svg>
+                                        </div>
+                                        <div class="ml-5 w-0 flex-1">
+                                            <h3 class="text-lg font-semibold text-red-900 dark:text-white mb-1">Tổng
+                                                chi</h3>
+                                            <p id="totalRevenue"
+                                                class="text-2xl font-bold text-red-600 dark:text-red-400">0 ₫</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Card 3: Số dư -->
+                            <div
+                                class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 ease-in-out transform hover:-translate-y-1">
+                                <div class="p-5">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 bg-cyan-500 rounded-lg p-3">
+                                            <svg class="w-[40px] h-[40px] fill-[#ffffff]" viewBox="0 0 512 512"
+                                                xmlns="http://www.w3.org/2000/svg">
+
+                                                <!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. -->
+                                                <path
+                                                    d="M512 80c0 18-14.3 34.6-38.4 48c-29.1 16.1-72.5 27.5-122.3 30.9c-3.7-1.8-7.4-3.5-11.3-5C300.6 137.4 248.2 128 192 128c-8.3 0-16.4 .2-24.5 .6l-1.1-.6C142.3 114.6 128 98 128 80c0-44.2 86-80 192-80S512 35.8 512 80zM160.7 161.1c10.2-.7 20.7-1.1 31.3-1.1c62.2 0 117.4 12.3 152.5 31.4C369.3 204.9 384 221.7 384 240c0 4-.7 7.9-2.1 11.7c-4.6 13.2-17 25.3-35 35.5c0 0 0 0 0 0c-.1 .1-.3 .1-.4 .2l0 0 0 0c-.3 .2-.6 .3-.9 .5c-35 19.4-90.8 32-153.6 32c-59.6 0-112.9-11.3-148.2-29.1c-1.9-.9-3.7-1.9-5.5-2.9C14.3 274.6 0 258 0 240c0-34.8 53.4-64.5 128-75.4c10.5-1.5 21.4-2.7 32.7-3.5zM416 240c0-21.9-10.6-39.9-24.1-53.4c28.3-4.4 54.2-11.4 76.2-20.5c16.3-6.8 31.5-15.2 43.9-25.5V176c0 19.3-16.5 37.1-43.8 50.9c-14.6 7.4-32.4 13.7-52.4 18.5c.1-1.8 .2-3.5 .2-5.3zm-32 96c0 18-14.3 34.6-38.4 48c-1.8 1-3.6 1.9-5.5 2.9C304.9 404.7 251.6 416 192 416c-62.8 0-118.6-12.6-153.6-32C14.3 370.6 0 354 0 336V300.6c12.5 10.3 27.6 18.7 43.9 25.5C83.4 342.6 135.8 352 192 352s108.6-9.4 148.1-25.9c7.8-3.2 15.3-6.9 22.4-10.9c6.1-3.4 11.8-7.2 17.2-11.2c1.5-1.1 2.9-2.3 4.3-3.4V304v5.7V336zm32 0V304 278.1c19-4.2 36.5-9.5 52.1-16c16.3-6.8 31.5-15.2 43.9-25.5V272c0 10.5-5 21-14.9 30.9c-16.3 16.3-45 29.7-81.3 38.4c.1-1.7 .2-3.5 .2-5.3zM192 448c56.2 0 108.6-9.4 148.1-25.9c16.3-6.8 31.5-15.2 43.9-25.5V432c0 44.2-86 80-192 80S0 476.2 0 432V396.6c12.5 10.3 27.6 18.7 43.9 25.5C83.4 438.6 135.8 448 192 448z">
+                                                </path>
+
+                                            </svg>
+                                        </div>
+                                        <div class="ml-5 w-0 flex-1">
+                                            <h3 class="text-lg font-semibold text-cyan-900 dark:text-white mb-1">Số dư
+                                            </h3>
+                                            <p id="averageDiscount"
+                                                class="text-2xl font-bold text-cyan-600 dark:text-cyan-400">0</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Chart Card -->
+                        <div
+                            class="card mb-6 p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
+
+                            <div class="card-body rounded-xl">
+                                <div id="statsChart" class="rounded-lg" style="height: 400px;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Group Data Table Card -->
+                        <div
+                            class="card mb-6 p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
+                            <div class="card-header">
+                                <p class="text-3xl p-3 text-gray-900 dark:text-white">Tổng hợp thu chi theo hợp đồng</p>
+                            </div>
+                            <div class="card-body">
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-300 dark:divide-gray-700">
+                                        <thead
+                                            class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                                            <tr>
+                                                <th scope="col" class="px-6 py-3">Số hợp đồng</th>
+                                                <th scope="col" class="px-6 py-3">Tổng thu</th>
+                                                <th scope="col" class="px-6 py-3">Tổng chi</th>
+                                                <th scope="col" class="px-6 py-3">Số dư</th>
+                                                <th scope="col" class="px-6 py-3">tỷ lệ</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="groupDataTableBody"
+                                            class="divide-y divide-gray-200 dark:divide-gray-700">
+                                            <!-- Dữ liệu nhóm sẽ được thêm vào đây bằng JavaScript -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="mt-4 flex justify-between items-center">
+                                    <div>
+                                        <span class="text-sm text-gray-700 dark:text-gray-400">
+                                            Hiển thị <span id="groupStartIndex">1</span> đến <span
+                                                id="groupEndIndex">10</span> của <span id="groupTotalItems">0</span> mục
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <button id="groupPrevPage"
+                                            class="px-3 py-1 bg-gray-200 text-gray-700 rounded-l-md">Trước</button>
+                                        <button id="groupNextPage"
+                                            class="px-3 py-1 bg-gray-200 text-gray-700 rounded-r-md">Sau</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Data Table Card -->
+                        <div
+                            class="card p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
+                            <div class="card-header">
+                                <p class="text-3xl p-3 text-gray-900 dark:text-white">Danh sách thu chi</p>
+                            </div>
+                            <div class="card-body">
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-300 dark:divide-gray-700">
+                                        <thead
+                                            class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                                            <tr>
+                                                <th scope="col" class="px-6 py-3">Ngày tháng</th>
+                                                <th scope="col" class="px-6 py-3">Loại</th>
+                                                <th scope="col" class="px-6 py-3">Nhóm</th>
+                                                <th scope="col" class="px-6 py-3">Số hợp đồng</th>
+                                                <th scope="col" class="px-6 py-3">Nội dung</th>
+                                                <th scope="col" class="px-6 py-3">Số tiền</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="dataTableBody" class="divide-y divide-gray-200 dark:divide-gray-700">
+                                            <!-- Table rows will be dynamically inserted here -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="mt-4 flex justify-between items-center">
+                                    <div>
+                                        <span class="text-sm text-gray-700 dark:text-gray-400">
+                                            Hiển thị <span id="dataStartIndex">1</span> đến <span
+                                                id="dataEndIndex">10</span> của <span id="dataTotalItems">0</span> mục
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <button id="dataPrevPage"
+                                            class="px-3 py-1 bg-gray-200 text-gray-700 rounded-l-md">Trước</button>
+                                        <button id="dataNextPage"
+                                            class="px-3 py-1 bg-gray-200 text-gray-700 rounded-r-md">Sau</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Constants and Globals
+        const appId = 'd3755e47-c036-4240-ae62-1f73f8f765e5';
+        const accessKey = 'V2-Q0yDm-HLXef-NJM6h-Oh4DH-TstFH-WqX7z-b8vMO-Q7Kv4';
+        const region = 'www';
+        const itemsPerPage = 10;
+        let data = [];
+        let currentPage = 1;
+        let currentGroupPage = 1;
+        function showLoading() {
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.add('hidden');
+        }
+        // Utility functions
+        const formatCurrency = amount => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+        const formatDate = dateString => {
+            const date = new Date(dateString);
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        };
+
+        // API request function
+        async function apiRequest(tableName, action, data, Properties) {
+            const apiUrl = `https://${region}.appsheet.com/api/v2/apps/${appId}/tables/${tableName}/Action`;
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'ApplicationAccessKey': accessKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        Action: action,
+                        ...Properties,
+                        ...data
+                    })
+                });
+
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return await response.json();
+            } catch (error) {
+                console.error("API Error:", error);
+                throw error;
+            }
+        }
+
+        // Fetch data from API
+        async function fetchSanphamData() {
+            try {
+                const response = await apiRequest('ThuCHI', 'Find', {}, {
+                    Properties: {
+                        Selector: `Filter(ThuCHI, true)`,
+                        UserSettings: {
+                            "User name": "sep",
+                            "Password": "22"
+                        }
+                    }
+                });
+                if (!Array.isArray(response) || response.length === 0) {
+                    throw new Error("Invalid data received from API");
+                }
+                return response;
+            } catch (error) {
+                console.error("Error fetching data from AppSheet:", error);
+                throw error;
+            }
+        }
+
+        // Initialize app
+        async function init() {
+            try {
+                showLoading();
+                data = await fetchSanphamData();
+                updateFilters();
+                applyFilters();
+                setupEventListeners();
+            } catch (error) {
+                console.error("Error initializing app:", error);
+                alert("Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.");
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Update stats
+        function updateStats(filteredData) {
+            const totals = filteredData.reduce((acc, item) => {
+                const amount = parseFloat(item['SỐ TIỀN']);
+                if (item.LOẠI === 'Thu') acc.totalThu += amount;
+                else if (item.LOẠI === 'Chi') acc.totalChi += amount;
+                return acc;
+            }, { totalThu: 0, totalChi: 0 });
+
+            const soDu = totals.totalThu - totals.totalChi;
+
+            document.getElementById('totalInvoices').textContent = formatCurrency(totals.totalThu);
+            document.getElementById('totalRevenue').textContent = formatCurrency(totals.totalChi);
+            document.getElementById('averageDiscount').textContent = formatCurrency(soDu);
+        }
+
+        // Update chart
+        function updateChart(filteredData) {
+            const monthlyData = filteredData.reduce((acc, item) => {
+                const date = new Date(item['NGÀY THÁNG']);
+                const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                if (!acc[key]) acc[key] = { thu: 0, chi: 0 };
+                const amount = parseFloat(item['SỐ TIỀN']);
+                if (item.LOẠI === 'Thu') acc[key].thu += amount;
+                else if (item.LOẠI === 'Chi') acc[key].chi += amount;
+                return acc;
+            }, {});
+
+            const chartData = Object.entries(monthlyData)
+                .map(([key, value]) => ({
+                    month: key,
+                    thu: value.thu,
+                    chi: value.chi,
+                    soDu: value.thu - value.chi
+                }))
+                .sort((a, b) => a.month.localeCompare(b.month));
+
+            Highcharts.chart('statsChart', {
+                chart: { type: 'column' },
+                title: { text: 'Thu Chi và Số Dư theo tháng' },
+                xAxis: { categories: chartData.map(item => item.month) },
+                yAxis: {
+                    title: { text: 'Số tiền (VNĐ)' },
+                    labels: {
+                        formatter: function () {
+                            return Highcharts.numberFormat(this.value, 0, ',', '.') + ' ₫';
+                        }
+                    }
+                },
+                tooltip: {
+                    formatter: function () {
+                        return `<b>${this.x}</b><br/>
+                        ${this.series.name}: ${Highcharts.numberFormat(this.y, 0, ',', '.')} ₫`;
+                    }
+                },
+                plotOptions: {
+                    column: {
+                        dataLabels: {
+                            enabled: true,
+                            formatter: function () {
+                                return Highcharts.numberFormat(this.y, 0, ',', '.') + ' ₫';
+                            }
+                        }
+                    }
+                },
+                series: [
+                    {
+                        name: 'Thu',
+                        data: chartData.map(item => item.thu),
+                        color: '#4ade80' // Màu xanh lá
+                    },
+                    {
+                        name: 'Chi',
+                        data: chartData.map(item => item.chi),
+                        color: '#f87171' // Màu đỏ
+                    },
+                    {
+                        name: 'Số Dư',
+                        data: chartData.map(item => item.soDu),
+                        color: '#22d3ee' // Màu xanh dương
+                    }
+                ]
+            });
+        }
+        function getDateRange(range) {
+            const today = new Date();
+            const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
+            const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+            const startOfYear = new Date(today.getFullYear(), 0, 1);
+
+            switch (range) {
+                case 'today':
+                    return { start: new Date(), end: new Date() };
+                case 'thisWeek':
+                    return { start: startOfWeek, end: new Date() };
+                case 'lastWeek':
+                    const lastWeekStart = new Date(startOfWeek.setDate(startOfWeek.getDate() - 7));
+                    const lastWeekEnd = new Date(startOfWeek.setDate(startOfWeek.getDate() + 6));
+                    return { start: lastWeekStart, end: lastWeekEnd };
+                case 'thisMonth':
+                    return { start: startOfMonth, end: new Date() };
+                case 'lastMonth':
+                    const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                    const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
+                    return { start: lastMonthStart, end: lastMonthEnd };
+                case 'thisYear':
+                    return { start: startOfYear, end: new Date() };
+                default:
+                    return { start: null, end: null };
+            }
+        }
+        // Update group data table
+        function updateGroupDataTable(filteredData) {
+            const groupData = filteredData.filter(item => item.LHĐ === "Hợp đồng")
+                .reduce((acc, item) => {
+                    const key = item['Số hợp đồng show'];
+                    if (!acc[key]) acc[key] = { tongThu: 0, tongChi: 0 };
+                    const amount = parseFloat(item['SỐ TIỀN']);
+                    if (item.LOẠI === 'Thu') acc[key].tongThu += amount;
+                    else if (item.LOẠI === 'Chi') acc[key].tongChi += amount;
+                    return acc;
+                }, {});
+
+            const tableData = Object.entries(groupData).map(([key, value]) => {
+                const soDu = value.tongThu - value.tongChi;
+                const tyLe = value.tongThu !== 0 ? (soDu / value.tongThu * 100).toFixed(2) : '0';
+                return { key, tongThu: value.tongThu, tongChi: value.tongChi, soDu, tyLe };
+            });
+
+            renderPaginatedTable('groupDataTableBody', tableData, currentGroupPage, renderGroupTableRow);
+            updatePagination('group', tableData.length, currentGroupPage, itemsPerPage);
+        }
+
+        // Update data table
+        function updateDataTable(filteredData) {
+            renderPaginatedTable('dataTableBody', filteredData, currentPage, renderDataTableRow);
+            updatePagination('data', filteredData.length, currentPage, itemsPerPage);
+        }
+
+        // Render paginated table
+        function renderPaginatedTable(tableBodyId, data, page, renderRowFunc) {
+            const tableBody = document.getElementById(tableBodyId);
+            tableBody.innerHTML = '';
+            const startIndex = (page - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            data.slice(startIndex, endIndex).forEach(item => renderRowFunc(tableBody, item));
+        }
+
+        // Render group table row
+        function renderGroupTableRow(tableBody, item) {
+            const row = tableBody.insertRow();
+            if (item.soDu < 0) {
+                row.classList.add('bg-red-100', 'dark:bg-red-800');
+            }
+            row.innerHTML = `
+        <td class="px-3 py-4 text-sm text-gray-500 dark:text-gray-400">${item.key}</td>
+        <td class="px-3 py-4 text-sm text-gray-500 dark:text-gray-400">${formatCurrency(item.tongThu)}</td>
+        <td class="px-3 py-4 text-sm text-gray-500 dark:text-gray-400">${formatCurrency(item.tongChi)}</td>
+        <td class="px-3 py-4 text-sm text-gray-500 dark:text-gray-400">${formatCurrency(item.soDu)}</td>
+        <td class="px-3 py-4 text-sm text-gray-500 dark:text-gray-400">${item.tyLe}%</td>
+    `;
+        }
+
+        // Render data table row
+        function renderDataTableRow(tableBody, item) {
+            const row = tableBody.insertRow();
+            row.innerHTML = `
+        <td class="px-3 py-4 text-sm text-gray-500 dark:text-gray-400">${formatDate(item['NGÀY THÁNG'])}</td>
+        <td class="px-3 py-4 text-sm text-gray-500 dark:text-gray-400">${item.LOẠI}</td>
+        <td class="px-3 py-4 text-sm text-gray-500 dark:text-gray-400">${item.NHÓM}</td>
+        <td class="px-3 py-4 text-sm text-gray-500 dark:text-gray-400">${item['Số hợp đồng show']}</td>
+        <td class="px-3 py-4 text-sm text-gray-500 dark:text-gray-400">${item['NỘI DUNG']}</td>
+        <td class="px-3 py-4 text-sm text-gray-500 dark:text-gray-400">${formatCurrency(parseFloat(item['SỐ TIỀN']))}</td>
+    `;
+        }
+
+        function updatePagination(prefix, totalItems, currentPage, itemsPerPage) {
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            const startIndex = (currentPage - 1) * itemsPerPage + 1;
+            const endIndex = Math.min(startIndex + itemsPerPage - 1, totalItems);
+
+            document.getElementById(`${prefix}StartIndex`).textContent = startIndex;
+            document.getElementById(`${prefix}EndIndex`).textContent = endIndex;
+            document.getElementById(`${prefix}TotalItems`).textContent = totalItems;
+
+            document.getElementById(`${prefix}PrevPage`).disabled = currentPage === 1;
+            document.getElementById(`${prefix}NextPage`).disabled = currentPage === totalPages;
+        }
+        function changePage(prefix, direction) {
+            if (prefix === 'group') {
+                currentGroupPage += direction;
+                updateGroupDataTable(data.filter(item => item.LHĐ === "Hợp đồng"));
+            } else {
+                currentPage += direction;
+                updateDataTable(data);
+            }
+        }
+
+        // Update filters
+        function updateFilters() {
+            const filters = ['loai', 'sohopdong', 'nhanvien', 'trangthai', 'nhom'];
+            const filterMappings = {
+                'loai': 'LOẠI',
+                'sohopdong': 'Số hợp đồng show',
+                'nhanvien': 'NGƯỜI NỘP/NHẬN TIỀN',
+                'trangthai': 'LHĐ',
+                'nhom': 'NHÓM'
+            };
+
+            filters.forEach(filter => {
+                const uniqueValues = [...new Set(data.map(item => item[filterMappings[filter]]))];
+                updateFilterOptions(`${filter}Filter`, uniqueValues);
+            });
+        }
+
+        // Update filter options
+        function updateFilterOptions(selectElementId, options) {
+            const selectElement = document.getElementById(selectElementId);
+            selectElement.innerHTML = '<option value="">Tất cả</option>';
+            options.forEach(option => {
+                const optionElement = document.createElement('option');
+                optionElement.value = option;
+                optionElement.textContent = option;
+                selectElement.appendChild(optionElement);
+            });
+        }
+
+        // Apply filters
+        function applyFilters() {
+            showLoading();
+            const filters = {
+                loai: document.getElementById('loaiFilter').value,
+                soHopDong: document.getElementById('sohopdongFilter').value,
+                nhanVien: document.getElementById('nhanvienFilter').value,
+                lhd: document.getElementById('trangthaiFilter').value,
+                dateRange: document.getElementById('dateRangeFilter').value,
+                nhom: document.getElementById('nhomFilter').value
+            };
+
+            const dateRange = getDateRange(filters.dateRange);
+
+            const filteredData = data.filter(item => {
+                const itemDate = new Date(item['NGÀY THÁNG']);
+                return (!filters.loai || item.LOẠI === filters.loai) &&
+                    (!filters.soHopDong || item['Số hợp đồng show'] === filters.soHopDong) &&
+                    (!filters.nhanVien || item['NGƯỜI NỘP/NHẬN TIỀN'] === filters.nhanVien) &&
+                    (!filters.lhd || item.LHĐ === filters.lhd) &&
+                    (!filters.nhom || item.NHÓM === filters.nhom) &&
+                    (!dateRange.start || itemDate >= dateRange.start) &&
+                    (!dateRange.end || itemDate <= dateRange.end);
+            });
+
+            updateStats(filteredData);
+            updateChart(filteredData);
+            updateGroupDataTable(filteredData);
+            updateDataTable(filteredData);
+            hideLoading();
+        }
+
+
+        // Export to Excel
+        function exportToExcel() {
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Thu Chi Data");
+            XLSX.writeFile(wb, "thu_chi_data.xlsx");
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+
+            document.getElementById('darkModeToggle').addEventListener('click', () => {
+                document.documentElement.classList.toggle('dark');
+                document.getElementById('darkModeIcon').classList.toggle('hidden');
+                document.getElementById('lightModeIcon').classList.toggle('hidden');
+            });
+            document.getElementById('applyFilters').addEventListener('click', applyFilters);
+            document.getElementById('dateRangeFilter').addEventListener('change', applyFilters);
+            document.getElementById('resetFilters').addEventListener('click', () => {
+                ['loai', 'sohopdong', 'nhanvien', 'trangthai'].forEach(filter => {
+                    document.getElementById(`${filter}Filter`).value = '';
+                });
+
+                applyFilters();
+            });
+
+            document.getElementById('exportExcel').addEventListener('click', exportToExcel);
+            document.getElementById('groupPrevPage').addEventListener('click', () => changePage('group', -1));
+            document.getElementById('groupNextPage').addEventListener('click', () => changePage('group', 1));
+            document.getElementById('dataPrevPage').addEventListener('click', () => changePage('data', -1));
+            document.getElementById('dataNextPage').addEventListener('click', () => changePage('data', 1));
+        }
+
+        // Initialize app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+
+</html>
