@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="vi">
 
@@ -386,7 +387,7 @@
                 // Thêm các sản phẩm của hệ (bỏ cột hình ảnh vì đã hiển thị ở header)
                 groupedProducts[systemName].forEach(item => {
                     const row = document.createElement('tr');
-                    const amount = parseFloat(item['ĐƠN GIÁ']) * parseFloat(item['NHÂN BẢN SP'] || 1);
+                    const amount = parseFloat(item['THÀNH TIỀN']) ;
                     totalAmount += amount;
 
                     row.innerHTML = `
@@ -396,7 +397,7 @@
             <td class="text-center">${item['DÀI P'] || ''}</td>
             <td class="text-center">${item['SÂU P'] || ''}</td>
             <td class="text-center">${item['CAO P'] || ''}</td>
-            <td class="text-center">${item['NHÂN BẢN SP'] || '1'}</td>
+            <td class="text-center">${item['KL ĐƠN VỊ'] || '1'}</td>
             <td class="text-right">${formatCurrency(item['ĐƠN GIÁ'])}</td>
             <td class="text-right">${formatCurrency(amount)}</td>
             <td>${item['GHI CHÚ RIÊNG'] || ''}</td>
