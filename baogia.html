@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 
@@ -165,9 +164,9 @@
                     <tr>
                         <th rowspan="4"> <img src="logo.png" style="width: 100px; margin: 30px"></th>
                         <th style="width: 60%;" rowspan="4" class="center">
-                            <h5 class="bold ">CÔNG TY TNHH NỘI THẤT Nana - Xưởng gỗ giá tốt</h5>
-                            <h5 class="bold">BẢNG BÁO GIÁ</h5>
-                            <h5 class="bold">ĐỊA CHỈ: 180 quốc lộ 1A , Bình Chánh , Hồ Chí Minh</h5>
+                            <h5 class="bold ">CÔNG TY TNHH NANA VN</h5>
+                            <h5 class="bold">MST: 0316079373</h5>
+                            <h5 class="bold">ĐỊA CHỈ: 180 quốc lộ 1A, tt Tân Túc , Bình Chánh , Hồ Chí Minh</h5>
                         </th>
                         <td style="font-size: 12px;">Số hợp đồng: </td>
                         <td style="font-size: 12px;"><span id="idbg"></span></td>
@@ -183,23 +182,25 @@
                         </td>
                     </tr>
                 </table>
-
+              
+                    <h4 style="text-align: center; font-weight: bold;">BẢNG BÁO GIÁ</h4>
+                 
                 <div style="clear: both"></div>
                 <br>
                 <p><strong>Kính gửi: <span id="companyName"></span></strong></p>
                 <p>Địa chỉ: <span id="companyAddress"></span></p>
+                <p>Xin chân thành cảm ơn quý Anh/Chị đã tin tưởng NaNa suốt thời gian qua</p>
+
                 <p>Chúng tôi xin gửi đến Quý khách hàng thông tin báo giá như sau:</p>
 
                 <table class="table table-bordered">
                     <thead>
+                     
                         <tr>
-                            <th rowspan="2" class="text-center align-middle">STT</th>
-                            <th colspan="9" class="text-center">THÔNG TIN SẢN PHẨM</th>
-                            <th rowspan="2" class="text-center align-middle">GHI CHÚ</th>
-                        </tr>
-                        <tr>
+                            <th  class="text-center align-middle">STT</th>
                             <th class="text-center">TÊN SẢN PHẨM</th>
                             <th class="text-center">CÁC LOẠI VL, T.KẾ</th>
+                            <th class="text-center">THÔNG TIN SẢN PHẨM</th>
                             <th class="text-center">DÀI</th>
                             <th class="text-center">RỘNG/SÂU</th>
                             <th class="text-center">CAO</th>
@@ -393,6 +394,7 @@
                     row.innerHTML = `
             <td class="text-center">${globalIndex}</td>
              <td>${item['TÊN SẢN PHẨM'] || item['Tên sản phẩm'] || ''}</td>
+            <td class="text-center">${item['CÁC LOẠI VL, T.KẾ'] || ''}</td>
             <td class="text-center">${item['CHI TIẾT SP'] || ''}</td>
             <td class="text-center">${item['DÀI P'] || ''}</td>
             <td class="text-center">${item['SÂU P'] || ''}</td>
@@ -401,7 +403,6 @@
             <td class="text-right">${formatCurrency(item['ĐƠN GIÁ'])}</td>
             <td class="text-right">${formatCurrency(amount)}</td>
             <td>${item['GHI CHÚ RIÊNG'] || ''}</td>
-            <td></td> <!-- Cột hình ảnh để trống vì đã hiển thị ở header -->
         `;
 
                     tbody.appendChild(row);
