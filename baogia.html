@@ -75,7 +75,7 @@
             }
 
             .fixed-button {
-                display: none  !important;
+                display: none !important;
             }
 
             @page {
@@ -151,7 +151,7 @@
         <button onclick="window.print()" class="btn btn-info">
             <i class="fa fa-print"></i> In báo giá
         </button>
-     
+
         <button onclick="exportToWord()" class="btn btn-primary">
             <i class="fa fa-file-word"></i> Xuất Word
         </button>
@@ -171,7 +171,7 @@
                         <td style="font-size: 12px;">Số hợp đồng: </td>
                         <td style="font-size: 12px;"><span id="idbg"></span></td>
                     </tr>
-               
+
                     <tr>
                         <td colspan="2" style="font-size: 12px;">https://www.facebook.com/xuonggonana
                         </td>
@@ -182,9 +182,9 @@
                         </td>
                     </tr>
                 </table>
-              
-                    <h4 style="text-align: center; font-weight: bold;">BẢNG BÁO GIÁ</h4>
-                 
+
+                <h4 style="text-align: center; font-weight: bold;">BẢNG BÁO GIÁ</h4>
+
                 <div style="clear: both"></div>
                 <br>
                 <p><strong>Kính gửi: <span id="companyName"></span></strong></p>
@@ -195,9 +195,9 @@
 
                 <table class="table table-bordered">
                     <thead>
-                     
+
                         <tr>
-                            <th  class="text-center align-middle">STT</th>
+                            <th class="text-center align-middle">STT</th>
                             <th class="text-center">TÊN SẢN PHẨM</th>
                             <th class="text-center">CÁC LOẠI VL, T.KẾ</th>
                             <th class="text-center">THÔNG TIN SẢN PHẨM</th>
@@ -339,7 +339,7 @@
                     totalsBySystem[systemName] = 0;
                 }
                 groupedProducts[systemName].push(item);
-                const amount = parseFloat(item['ĐƠN GIÁ']) * parseFloat(item['NHÂN BẢN SP'] || 1);
+                const amount = parseFloat(item['THÀNH TIỀN'])  || 1;
                 totalsBySystem[systemName] += amount;
             });
 
@@ -372,8 +372,8 @@
                 const headerRow = document.createElement('tr');
                 headerRow.className = 'system-header';
                 headerRow.innerHTML = `
-        <td colspan="5" class="font-weight-bold">
-            HỆ: ${systemName}
+        <td colspan="5"  class="font-weight-bold">
+          
         </td>
          <td colspan="4"  class="text-center">
             ${systemImage ? `<img src="${systemImage}" style="max-width: 300px; height: auto;"  alt="Hình ảnh hệ">` : ''}
@@ -388,7 +388,7 @@
                 // Thêm các sản phẩm của hệ (bỏ cột hình ảnh vì đã hiển thị ở header)
                 groupedProducts[systemName].forEach(item => {
                     const row = document.createElement('tr');
-                    const amount = parseFloat(item['THÀNH TIỀN']) ;
+                    const amount = parseFloat(item['THÀNH TIỀN']);
                     totalAmount += amount;
 
                     row.innerHTML = `
@@ -440,10 +440,10 @@
                 `;
             });
 
- 
 
-    // Tạo HTML cho phần tfoot với điều kiện hiển thị
-    const tfootHTML = `
+
+            // Tạo HTML cho phần tfoot với điều kiện hiển thị
+            const tfootHTML = `
         <tr>
             <td colspan="8" class="text-right"><strong>TỔNG GIÁ TRỊ:</strong></td>
             <td colspan="3" class="text-right"><span id="tongGiaTri">${formatCurrency(totalAmount)}</span></td>
@@ -472,9 +472,9 @@
         </tr>
     `;
 
-    // Cập nhật tfoot của bảng
-    const tfoot = document.querySelector('table tfoot');
-    tfoot.innerHTML = tfootHTML;
+            // Cập nhật tfoot của bảng
+            const tfoot = document.querySelector('table tfoot');
+            tfoot.innerHTML = tfootHTML;
 
             // Thêm ghi chú
             document.getElementById('ghiChu').innerHTML = `
