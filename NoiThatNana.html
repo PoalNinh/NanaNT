@@ -265,7 +265,7 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                 Nhóm hệ
+                                    Nhóm hệ
                                 </label>
                                 <div id="configTags" class="flex flex-wrap gap-2">
                                     <!-- Tags will be inserted here -->
@@ -273,11 +273,11 @@
                             </div>
 
                             <!-- Folder Tags -->
-                         
+
 
 
                             <!-- Reset Button -->
-                         
+
                         </div>
                     </div>
                 </div>
@@ -631,8 +631,13 @@
         }
 
         // Hàm format số
-        function formatNumber(number) {
-            return number ? number.toLocaleString('vi-VN') : '0';
+        function formatNumber(value) {
+            if (!value) return 0;
+            // Nếu là chuỗi, loại bỏ ký tự không phải số và dấu chấm/phẩy
+            if (typeof value === 'string') {
+                return Number(value.replace(/[^\d.-]/g, ''));
+            }
+            return value;
         }
 
         // Sửa lại hàm openDetailModal để sử dụng dữ liệu từ biến toàn cục
@@ -714,17 +719,20 @@
                             </tr>
                         `).join('')}
                     </tbody>
-                    <tfoot class="bg-gray-50 dark:bg-gray-800">
-                        <tr>
-                            <td colspan="11" class="px-6 py-3 text-right text-sm font-medium text-gray-500 dark:text-gray-300">
-                                Tổng cộng:
-                            </td>
-                            <td class="px-6 py-3 text-left text-sm font-medium text-gray-900 dark:text-gray-100">
-                                ${formatCurrency(productDetails.reduce((sum, detail) => sum + (detail['THÀNH TIỀN'] || 0), 0))}
-                            </td>
-                            <td colspan="3"></td>
-                        </tr>
-                    </tfoot>
+                 <tfoot class="bg-gray-50 dark:bg-gray-800">
+    <tr>
+        <td colspan="11" class="px-6 py-3 text-right text-sm font-medium text-gray-500 dark:text-gray-300">
+            Tổng cộng:
+        </td>
+        <td class="px-6 py-3 text-left text-sm font-medium text-gray-900 dark:text-gray-100">
+            ${formatCurrency(productDetails.reduce((sum, detail) => {
+                const amount = formatNumber(detail['THÀNH TIỀN']);
+                return sum + amount;
+            }, 0))}
+        </td>
+        <td colspan="3"></td>
+    </tr>
+</tfoot>
                 </table>
             </div>
         </div>
@@ -751,9 +759,9 @@
                 modal.querySelector('div:first-child').classList.remove('scale-95', 'opacity-0');
             }, 10);
         }
-     
-     
-     
+
+
+
         // Thêm event listeners cho form liên hệ
         document.getElementById('contactForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -821,89 +829,89 @@
                 modal.querySelector('div:first-child').classList.remove('scale-95', 'opacity-0');
             }, 10);
         }
-        
+
         function initializeFilters() {
-    // Lấy danh sách unique các giá trị
-    const configs = [...new Set(data.map(item => item['CẤU HÌNH HỆ']))].sort();
-    const folders = [...new Set(allProductDetails.map(item => item['FOLDER']))].filter(Boolean).sort();
+            // Lấy danh sách unique các giá trị
+            const configs = [...new Set(data.map(item => item['CẤU HÌNH HỆ']))].sort();
+            const folders = [...new Set(allProductDetails.map(item => item['FOLDER']))].filter(Boolean).sort();
 
-    // Khởi tạo config tags
-    const configTagsContainer = document.getElementById('configTags');
-    configTagsContainer.innerHTML = '';
-    configs.forEach(config => {
-        const tag = document.createElement('button');
-        tag.className = `px-3 py-1 rounded-full text-sm font-medium border transition-all duration-200
-            ${selectedConfigs.has(config) 
-                ? 'bg-primary-100 text-primary-800 border-primary-200 dark:bg-primary-900 dark:text-primary-200 dark:border-primary-700' 
-                : 'bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600'} 
+            // Khởi tạo config tags
+            const configTagsContainer = document.getElementById('configTags');
+            configTagsContainer.innerHTML = '';
+            configs.forEach(config => {
+                const tag = document.createElement('button');
+                tag.className = `px-3 py-1 rounded-full text-sm font-medium border transition-all duration-200
+            ${selectedConfigs.has(config)
+                        ? 'bg-primary-100 text-primary-800 border-primary-200 dark:bg-primary-900 dark:text-primary-200 dark:border-primary-700'
+                        : 'bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600'} 
             hover:shadow-md`;
-        tag.textContent = config;
-        tag.addEventListener('click', () => {
-            tag.classList.toggle('bg-primary-100');
-            tag.classList.toggle('text-primary-800');
-            tag.classList.toggle('border-primary-200');
-            tag.classList.toggle('dark:bg-primary-900');
-            tag.classList.toggle('dark:text-primary-200');
-            tag.classList.toggle('dark:border-primary-700');
-            if (selectedConfigs.has(config)) {
-                selectedConfigs.delete(config);
-            } else {
-                selectedConfigs.add(config);
-            }
-            filterProducts();
-        });
-        configTagsContainer.appendChild(tag);
-    });
+                tag.textContent = config;
+                tag.addEventListener('click', () => {
+                    tag.classList.toggle('bg-primary-100');
+                    tag.classList.toggle('text-primary-800');
+                    tag.classList.toggle('border-primary-200');
+                    tag.classList.toggle('dark:bg-primary-900');
+                    tag.classList.toggle('dark:text-primary-200');
+                    tag.classList.toggle('dark:border-primary-700');
+                    if (selectedConfigs.has(config)) {
+                        selectedConfigs.delete(config);
+                    } else {
+                        selectedConfigs.add(config);
+                    }
+                    filterProducts();
+                });
+                configTagsContainer.appendChild(tag);
+            });
 
-    // Khởi tạo folder tags
-    const folderTagsContainer = document.getElementById('folderTags');
-    folderTagsContainer.innerHTML = '';
-    folders.forEach(folder => {
-        const tag = document.createElement('button');
-        tag.className = `px-3 py-1 rounded-full text-sm font-medium border transition-all duration-200
-            ${selectedFolders.has(folder) 
-                ? 'bg-primary-100 text-primary-800 border-primary-200 dark:bg-primary-900 dark:text-primary-200 dark:border-primary-700' 
-                : 'bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600'} 
+            // Khởi tạo folder tags
+            const folderTagsContainer = document.getElementById('folderTags');
+            folderTagsContainer.innerHTML = '';
+            folders.forEach(folder => {
+                const tag = document.createElement('button');
+                tag.className = `px-3 py-1 rounded-full text-sm font-medium border transition-all duration-200
+            ${selectedFolders.has(folder)
+                        ? 'bg-primary-100 text-primary-800 border-primary-200 dark:bg-primary-900 dark:text-primary-200 dark:border-primary-700'
+                        : 'bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600'} 
             hover:shadow-md`;
-        tag.textContent = folder;
-        tag.addEventListener('click', () => {
-            tag.classList.toggle('bg-primary-100');
-            tag.classList.toggle('text-primary-800');
-            tag.classList.toggle('border-primary-200');
-            tag.classList.toggle('dark:bg-primary-900');
-            tag.classList.toggle('dark:text-primary-200');
-            tag.classList.toggle('dark:border-primary-700');
-            if (selectedFolders.has(folder)) {
-                selectedFolders.delete(folder);
-            } else {
-                selectedFolders.add(folder);
-            }
+                tag.textContent = folder;
+                tag.addEventListener('click', () => {
+                    tag.classList.toggle('bg-primary-100');
+                    tag.classList.toggle('text-primary-800');
+                    tag.classList.toggle('border-primary-200');
+                    tag.classList.toggle('dark:bg-primary-900');
+                    tag.classList.toggle('dark:text-primary-200');
+                    tag.classList.toggle('dark:border-primary-700');
+                    if (selectedFolders.has(folder)) {
+                        selectedFolders.delete(folder);
+                    } else {
+                        selectedFolders.add(folder);
+                    }
+                    filterProducts();
+                });
+                folderTagsContainer.appendChild(tag);
+            });
+        }
+
+        function resetFilters() {
+            // Reset search
+            document.getElementById('searchInput').value = '';
+
+            // Reset configs
+            selectedConfigs.clear();
+            document.querySelectorAll('#configTags button').forEach(tag => {
+                tag.classList.remove('bg-primary-100', 'text-primary-800', 'border-primary-200',
+                    'dark:bg-primary-900', 'dark:text-primary-200', 'dark:border-primary-700');
+            });
+
+            // Reset folders
+            selectedFolders.clear();
+            document.querySelectorAll('#folderTags button').forEach(tag => {
+                tag.classList.remove('bg-primary-100', 'text-primary-800', 'border-primary-200',
+                    'dark:bg-primary-900', 'dark:text-primary-200', 'dark:border-primary-700');
+            });
+
             filterProducts();
-        });
-        folderTagsContainer.appendChild(tag);
-    });
-}
-
-function resetFilters() {
-    // Reset search
-    document.getElementById('searchInput').value = '';
-
-    // Reset configs
-    selectedConfigs.clear();
-    document.querySelectorAll('#configTags button').forEach(tag => {
-        tag.classList.remove('bg-primary-100', 'text-primary-800', 'border-primary-200', 
-            'dark:bg-primary-900', 'dark:text-primary-200', 'dark:border-primary-700');
-    });
-
-    // Reset folders
-    selectedFolders.clear();
-    document.querySelectorAll('#folderTags button').forEach(tag => {
-        tag.classList.remove('bg-primary-100', 'text-primary-800', 'border-primary-200', 
-            'dark:bg-primary-900', 'dark:text-primary-200', 'dark:border-primary-700');
-    });
-
-    filterProducts();
-}
+        }
         // Hàm chuyển đổi từ có dấu sang không dấu
         function removeVietnameseTones(str) {
             str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
@@ -1050,51 +1058,51 @@ function resetFilters() {
         // Hàm lọc sản phẩm được tối ưu hóa
         // Cập nhật hàm filterProducts
         function filterProducts() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    const searchTermNoTone = removeVietnameseTones(searchTerm);
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const searchTermNoTone = removeVietnameseTones(searchTerm);
 
-    let filtered = data;
+            let filtered = data;
 
-    // Lọc theo tìm kiếm
-    if (searchTerm) {
-        filtered = filtered.filter(product => {
-            const productName = product['TÊN HỆ'].toLowerCase();
-            const productNameNoTone = removeVietnameseTones(productName);
-            const productCode = product['MÃ HH'].toLowerCase();
-            
-            // Tìm trong chi tiết sản phẩm
-            const relatedProducts = allProductDetails.filter(detail => detail['Mã hệ'] === product['MÃ HH']);
-            const matchInDetails = relatedProducts.some(detail => {
-                const detailName = (detail['TÊN SẢN PHẨM'] || '').toLowerCase();
-                const detailNameNoTone = removeVietnameseTones(detailName);
-                return detailName.includes(searchTerm) || detailNameNoTone.includes(searchTermNoTone);
-            });
+            // Lọc theo tìm kiếm
+            if (searchTerm) {
+                filtered = filtered.filter(product => {
+                    const productName = product['TÊN HỆ'].toLowerCase();
+                    const productNameNoTone = removeVietnameseTones(productName);
+                    const productCode = product['MÃ HH'].toLowerCase();
 
-            return productName.includes(searchTerm) ||
-                productNameNoTone.includes(searchTermNoTone) ||
-                productCode.includes(searchTerm) ||
-                matchInDetails;
-        });
-    }
+                    // Tìm trong chi tiết sản phẩm
+                    const relatedProducts = allProductDetails.filter(detail => detail['Mã hệ'] === product['MÃ HH']);
+                    const matchInDetails = relatedProducts.some(detail => {
+                        const detailName = (detail['TÊN SẢN PHẨM'] || '').toLowerCase();
+                        const detailNameNoTone = removeVietnameseTones(detailName);
+                        return detailName.includes(searchTerm) || detailNameNoTone.includes(searchTermNoTone);
+                    });
 
-    // Lọc theo cấu hình hệ
-    if (selectedConfigs.size > 0) {
-        filtered = filtered.filter(product =>
-            selectedConfigs.has(product['CẤU HÌNH HỆ'])
-        );
-    }
+                    return productName.includes(searchTerm) ||
+                        productNameNoTone.includes(searchTermNoTone) ||
+                        productCode.includes(searchTerm) ||
+                        matchInDetails;
+                });
+            }
 
-    // Lọc theo folder
-    if (selectedFolders.size > 0) {
-        filtered = filtered.filter(product => {
-            const relatedProducts = allProductDetails.filter(detail => detail['Mã hệ'] === product['MÃ HH']);
-            return relatedProducts.some(detail => selectedFolders.has(detail['FOLDER']));
-        });
-    }
+            // Lọc theo cấu hình hệ
+            if (selectedConfigs.size > 0) {
+                filtered = filtered.filter(product =>
+                    selectedConfigs.has(product['CẤU HÌNH HỆ'])
+                );
+            }
 
-    currentPage = 1;
-    renderProducts(filtered);
-}
+            // Lọc theo folder
+            if (selectedFolders.size > 0) {
+                filtered = filtered.filter(product => {
+                    const relatedProducts = allProductDetails.filter(detail => detail['Mã hệ'] === product['MÃ HH']);
+                    return relatedProducts.some(detail => selectedFolders.has(detail['FOLDER']));
+                });
+            }
+
+            currentPage = 1;
+            renderProducts(filtered);
+        }
         // Thêm debounce để tối ưu hiệu suất
         function debounce(func, wait) {
             let timeout;
